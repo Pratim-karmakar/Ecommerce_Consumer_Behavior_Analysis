@@ -1,313 +1,253 @@
+<div align="center">
+
 # E-Commerce Customer Analytics
 
-An end-to-end, locally executed Business Intelligence (BI) and Machine Learning (ML) analytics system built in Python on real **UCI Online Retail II** transaction records (`2009-12-01` to `2011-12-09`). The project combines structured data auditing, rule-based cleaning, RFM and behavioral feature engineering, exploratory analysis, four serialized machine learning pipelines (`Linear Regression`, `Logistic Regression`, `Item-Based KNN`, and `K-Means`), and an 11-page interactive Streamlit dashboard.
+**End-to-End Business Intelligence, Customer RFM Segmentation, Recommendation & Predictive ML Suite**
+
+[![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](app/app.py)
+[![Scikit-Learn](https://img.shields.io/badge/ML-Scikit--Learn-F7931E?logo=scikit-learn&logoColor=white)](src/models/)
+[![Plotly](https://img.shields.io/badge/Charts-Plotly-3F4F75?logo=plotly&logoColor=white)](visualizations/)
+[![Dataset](https://img.shields.io/badge/Dataset-UCI%20Online%20Retail%20II-1E3A8A)](dataset/Ecommerce.csv)
+[![Tests](https://img.shields.io/badge/Tests-19%2F19%20Passing-0F766E)](tests/)
+
+*Built exclusively on verified real UCI Online Retail II transactions (`2009-12-01` to `2011-12-09`) — zero synthetic customers, ratings, or demographics.*
+
+[Overview](#overview) • [Architecture](#architecture) • [Quick Start](#quick-start) • [Notebooks](#analytical-notebooks-0108) • [ML Results](#machine-learning-models--verified-benchmarks) • [Dashboard](#interactive-streamlit-dashboard-11-pages) • [Full Report](reports/final_project_report.md)
+
+</div>
 
 ---
 
-## Table of Contents
+## Executive Snapshot
 
-1. [Project Overview](#1-project-overview)
-2. [Problem Statement](#2-problem-statement)
-3. [Objectives](#3-objectives)
-4. [Dataset Description](#4-dataset-description)
-5. [Technology Stack](#5-technology-stack)
-6. [Project Folder Structure](#6-project-folder-structure)
-7. [Installation Instructions](#7-installation-instructions)
-8. [Environment Setup](#8-environment-setup)
-9. [How to Run Notebooks](#9-how-to-run-notebooks)
-10. [How to Run the Dashboard](#10-how-to-run-the-dashboard)
-11. [Machine Learning Algorithms](#11-machine-learning-algorithms)
-12. [Model Evaluation Results](#12-model-evaluation-results)
-13. [Limitations](#13-limitations)
-14. [Future Improvements](#14-future-improvements)
+| Business & Data Metric | Verified Result | ML & Engineering Artifact | Verified Result |
+|---|---:|---|---:|
+| **Raw Audit Volume** | `1,067,371` rows × `8` cols | **Future Spend (Linear Regression)** | Test `R² = 0.5511` \| `MAE = £586.61` |
+| **Validated Transactions** | `1,026,678` rows (`96.19%` retained) | **Repeat Purchase (Logistic Regression)** | `ROC-AUC = 0.7471` \| `PR-AUC = 0.8178` |
+| **Net Realized Revenue** | **`£19,265,931.71`** (`39,988` orders) | **Recommendations (Item-Based KNN)** | `Hit Rate@10 = 38.48%` \| `Coverage = 24.72%` |
+| **Purchasing Customers & SKUs** | `5,869` buyers \| `4,746` merchandise SKUs | **Segmentation (K-Means RFM)** | `K = 4` (`Silhouette = 0.3668`) + `ClusterID = -1` |
+| **Geographic Reach** | `43` markets (`85.12%` UK core) | **Dashboard & Test Suite** | `11` Streamlit pages \| `19/19` tests passing |
 
 ---
 
-## 1. Project Overview
+## Overview
 
-Online retail businesses accumulate high-volume transactional ledgers containing valid orders, customer cancellations/returns, shipping fees, guest checkouts, and duplicate exports. Without disciplined engineering, raw transaction tables distort revenue KPIs, leak future outcomes into predictive features, and produce unreliable models.
+Raw e-commerce transaction logs contain duplicate multi-sheet exports, customer returns (`C`-invoices), internal warehouse stock adjustments, accounting bad-debt entries (`A`-invoices), postage fees, and unregistered guest checkouts. Treating those records naively distorts executive KPIs and introduces temporal data leakage into predictive modeling.
 
-This project implements a reproducible analytics lifecycle across three layers:
-- **Notebooks (`notebooks/`):** Eight sequential, documented workflows from raw dataset audit through unsupervised segmentation.
-- **Modular Python Package (`src/`):** Tested, reusable pipeline code for path resolution, quality auditing, cleaning, feature engineering, EDA KPIs, ML training/evaluation, and schema-validated inference (`src/models/inference.py`).
-- **Interactive Dashboard (`app/`):** An 11-page Streamlit + Plotly web application backed by cached analytics tables (`dataset/processed/analytics/`) and saved `.joblib` artifacts (`models/`).
-
-All analysis and modeling use exclusively the real UCI Online Retail II records provided—no synthetic customers, ratings, or demographics were added.
+This project implements a disciplined, modular analytics and ML system covering:
+1. **Immutable Audit & Rule-Based Cleaning:** Read-only SHA-256 verification of `dataset/Ecommerce.csv`, deduplication (`34,335` exact duplicates including `22,844` Dec 2010 sheet-overlap rows), separation of `18,855` valid customer cancellations (`-£1,168,287.81`), and honest preservation of `228,994` guest checkouts.
+2. **Leakage-Free Predictive Modeling:** Chronological `275d → 90d` Q4 splits for spending forecasting and purchase propensity, chronological holdout evaluation for sparse Item-Based Cosine KNN, and `log1p`-scaled RFM segmentation.
+3. **Productionized Code & BI Application:** Clean, tested Python packages under `src/`, serialized pipelines in `models/`, and an interactive 11-page web dashboard under `app/`.
 
 ---
 
-## 2. Problem Statement
+## Architecture
 
-E-commerce managers need reliable answers to four operational questions:
-1. **What is the true net business performance** across time periods, products, and countries once sheet-overlap duplicates, warehouse write-offs, and customer cancellations are separated accurately?
-2. **How much will an active customer spend** in the upcoming quarter (`90` days) without using leaked post-cutoff data?
-3. **Which customers are likely to place a repeat purchase** in the next `90` days so retention campaigns can be budgeted cleanly?
-4. **Which products should be recommended to each customer**, and how can buyers be segmented by Recency, Frequency, and Monetary (`RFM`) value into actionable personas?
-
----
-
-## 3. Objectives
-
-- Preserve the original raw CSV read-only (`dataset/Ecommerce.csv`) and verify byte-for-byte integrity.
-- Perform a complete data quality audit documenting missingness, duplicates, cancellations (`C`-invoices), accounting adjustments (`A`-invoices), and anomalies.
-- Engineer clean transaction-, customer-, product-, country-, and monthly-level analytical tables.
-- Conduct quantitative EDA covering seasonality, weekday/hourly behavior, Pareto concentration, customer repeat retention, and market mix.
-- Build and benchmark four non-leaking ML components against explicit baselines, serialize trained pipelines to `models/`, and verify error-resilient inference via unit tests.
-- Deploy a clean, beginner-friendly interactive dashboard (`app/app.py`) exposing both BI exploration and live ML predictions.
+```mermaid
+flowchart LR
+    RAW["dataset/Ecommerce.csv\n(1,067,371 Raw Rows)"] --> CLEAN["01–02 Audit & Cleaning\nsrc/data/{audit,cleaning}.py"]
+    CLEAN --> FEAT["03 Feature Engineering\nsrc/features/engineering.py"]
+    FEAT --> EDA["04 EDA & KPIs\nsrc/analysis/eda_metrics.py"]
+    FEAT --> ML["05–08 ML Training & Eval\nsrc/models/{regression,classification,recommender,segmentation}.py"]
+    ML --> ART["models/*.joblib (4 Pipelines)\nreports/*.{csv,md}"]
+    FEAT --> APP["11-Page Streamlit Dashboard\napp/app.py + src/models/inference.py"]
+    ART --> APP
+```
 
 ---
 
-## 4. Dataset Description
+## Problem Statement & Objectives
 
-- **Source File (Immutable):** `dataset/Ecommerce.csv` (`90.46 MB`, UTF-8, SHA-256 `32569a66f3842a82b0d8c4d63b263c5d98a76bde5d1f65c6c01bf457e541d3a9`)
-- **Time Span:** `2009-12-01 07:45:00` to `2011-12-09 12:50:00` (combined `2009–2010` and `2010–2011` UCI Online Retail II periods; `25` monthly snapshots)
-- **Raw Schema (`1,067,371` rows × `8` columns):** `Invoice`, `StockCode`, `Description`, `Quantity`, `InvoiceDate`, `Price`, `Customer ID`, `Country`
-- **Cleaning Summary:**
-  - Retained **`1,026,678`** valid commercial transactions (`96.19%`), partitioned cleanly into **`1,007,823`** normal positive sales (`£20,434,219.52` gross) and **`18,855`** valid `C`-prefixed cancellations/returns (`-£1,168,287.81`).
-  - Removed `40,693` invalid/noise rows (`34,335` exact duplicates—including `22,844` in the Dec 1–9, 2010 sheet overlap window—plus `6` `A`-prefix bad-debt adjustments, `17` `TEST*` rows, `3,393` zero-price non-`C` warehouse write-offs, `2,618` positive `Price <= 0` entries, `1` anomalous positive `C`-row `C496350`, and `323` internal fee/sample rows).
-  - Preserved **`228,994`** valid guest/unregistered checkout rows (`has_customer_id = False`) for store-wide revenue/product metrics without fabricating customer IDs.
-  - Non-null customer modeling tables cover `5,869` purchasing customers (plus `52` return-only accounts tracked transparently during cleaning).
-
----
-
-## 5. Technology Stack
-
-- **Language:** Python `3.14` (`3.14.6` in `.venv`)
-- **Data Manipulation:** `pandas`, `numpy`
-- **Visualization:** `plotly`, `matplotlib`, `seaborn`
-- **Machine Learning & Serialization:** `scikit-learn`, `scipy`, `joblib`
-- **Interactive Web Dashboard:** `streamlit`
-- **Notebooks & Testing:** `jupyter`, `ipykernel`, `nbconvert`, `unittest` (`streamlit.testing.v1.AppTest`)
+| Business Question | Engineering & Modeling Solution |
+|---|---|
+| What is the true net revenue once overlaps, write-offs, and returns are accounted for? | Rule-based cleaning separating normal sales (`£20.43M`) and valid `C`-returns (`-£1.17M`) |
+| How much will an eligible customer spend in the upcoming 90-day Q4 window? | Non-leaking chronological `LinearRegression` pipeline benchmarked vs. Mean/Median/Simple OLS |
+| Which active buyers are most likely to make a repeat purchase in the next 90 days? | Signed-`log1p` `LogisticRegression` with train-CV threshold tuning (`0.34` max-F1 / `0.56` balanced precision) |
+| What complementary merchandise SKUs should be recommended per buyer or product? | Sparse CSR **Item-Based Cosine KNN** (`min_item_customers=5`) + cold-start bestseller fallback |
+| Which behavioral RFM segments drive revenue vs. churn risk? | `log1p`-scaled `KMeans` (`K = 4` + isolated `ClusterID = -1` for `MonetaryValue <= £0` accounts) |
 
 ---
 
-## 6. Project Folder Structure
+## Visual Highlights
+
+| Customer RFM Clusters (`2D PCA: 95.19% Variance`) | Repeat Purchase Classifier (`ROC & PR Curves`) |
+|---|---|
+| ![K-Means RFM PCA Projection](visualizations/08_kmeans_pca_2d.png) | ![Logistic Regression ROC & PR Curves](visualizations/06_logreg_roc_and_pr_curves.png) |
+
+---
+
+## Quick Start
+
+### 1. Clone & Set Up Virtual Environment (Windows PowerShell)
+
+```powershell
+git clone https://github.com/Pratim-karmakar/Ecommerce_Consumer_Behavior_Analysis.git
+cd Ecommerce_Consumer_Behavior_Analysis
+
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip check
+```
+
+### 2. Regenerate `>100 MB` Transaction CSVs (After Fresh Clone)
+
+> **GitHub Storage Note:** Three derived transaction CSVs exceeding GitHub's `100 MB` limit (`dataset/processed/cleaned_online_retail.csv` at `118.3 MB`, `sales_transactions.csv` at `115.8 MB`, and `transaction_features.csv` at `168.7 MB`) are excluded via `.gitignore`. Customer, product, country, monthly analytics tables (`dataset/processed/analytics/`), trained `.joblib` models (`models/`), and raw `dataset/Ecommerce.csv` are all tracked in Git.
+
+Before running the transaction-level dashboard pages on a fresh clone, execute Notebooks `02` and `03` once to regenerate those three local CSVs:
+
+```powershell
+.\.venv\Scripts\python.exe -m ipykernel install --user --name ecommerce-analytics --display-name "Python (.venv - E-Commerce Analytics)"
+.\.venv\Scripts\python.exe -m nbconvert --to notebook --execute --inplace --ExecutePreprocessor.kernel_name=ecommerce-analytics notebooks/02_Data_Cleaning.ipynb
+.\.venv\Scripts\python.exe -m nbconvert --to notebook --execute --inplace --ExecutePreprocessor.kernel_name=ecommerce-analytics notebooks/03_Feature_Engineering.ipynb
+```
+
+### 3. Run Tests & Launch the Dashboard
+
+```powershell
+# Run all 19 unit, inference, and headless Streamlit dashboard tests
+.\.venv\Scripts\python.exe -m unittest discover -s tests -t . -v
+
+# Start the 11-page Streamlit app (http://localhost:8501)
+.\.venv\Scripts\python.exe -m streamlit run app/app.py
+```
+
+*(Using `.\.venv\Scripts\python.exe -m ...` prevents Windows Application Control or PowerShell script policies from blocking `.venv\Scripts\*.exe` wrappers.)*
+
+---
+
+## Analytical Notebooks (`01–08`)
+
+<details>
+<summary><b>Click to view the complete 8-notebook pipeline sequence</b></summary>
+
+| # | Notebook | Purpose | Key Output Artifacts |
+|---|---|---|---|
+| `01` | [`01_Data_Inspection.ipynb`](notebooks/01_Data_Inspection.ipynb) | Non-destructive quality audit (missingness, duplicates, cancellations, anomalies) | `reports/data_quality_report.{csv,md}` |
+| `02` | [`02_Data_Cleaning.ipynb`](notebooks/02_Data_Cleaning.ipynb) | Standardized types, removed `40,693` noise rows, split sales vs. returns | `dataset/processed/*.csv`, `reports/data_cleaning_report.md` |
+| `03` | [`03_Feature_Engineering.ipynb`](notebooks/03_Feature_Engineering.ipynb) | Temporal transaction features + Customer RFM (`ref = 2011-12-10`), Product, Country, Monthly tables | `dataset/processed/analytics/*.csv` |
+| `04` | [`04_Exploratory_Data_Analysis.ipynb`](notebooks/04_Exploratory_Data_Analysis.ipynb) | Seasonality, weekday/hour cadence, Pareto 80/20, buyer concentration, export hubs | `reports/eda_business_insights.md`, `visualizations/` |
+| `05` | [`05_Linear_Regression.ipynb`](notebooks/05_Linear_Regression.ipynb) | Chronological `275d → 90d` Q4 net spend regression vs. baselines | `models/linear_regression_pipeline.joblib`, `reports/linear_regression_results.csv` |
+| `06` | [`06_Logistic_Regression.ipynb`](notebooks/06_Logistic_Regression.ipynb) | Signed-`log1p` binary purchase propensity + 5-fold CV threshold tuning | `models/logistic_regression_pipeline.joblib`, `reports/logistic_regression_results.csv` |
+| `07` | [`07_KNN_Recommendation.ipynb`](notebooks/07_KNN_Recommendation.ipynb) | Item-KNN vs. User-KNN vs. Popularity evaluation + cold-start fallback | `models/knn_recommender.joblib`, `reports/knn_recommender_results.csv` |
+| `08` | [`08_KMeans_Customer_Segmentation.ipynb`](notebooks/08_KMeans_Customer_Segmentation.ipynb) | Elbow & Silhouette (`K=2..9`) selection (`K=4`), PCA projection, segment profiles | `models/kmeans_pipeline.joblib`, `customer_segments.csv`, `reports/kmeans_cluster_summary.csv` |
+
+</details>
+
+---
+
+## Machine Learning Models & Verified Benchmarks
+
+All predictors expose unified, schema-validated functions in [`src/models/inference.py`](src/models/inference.py) handling invalid types, missing models (`ModelLoadError`), missing numeric inputs (`SimpleImputer`), unknown SKUs (`UnknownProductError`), unseen users (popularity fallback), and negative monetary values (`ClusterID = -1`).
+
+### 1. Future Customer Spending — Linear Regression ([`linear_regression_results.csv`](reports/linear_regression_results.csv))
+- **Pipeline:** `SimpleImputer(median)` → `StandardScaler()` → `LinearRegression()`
+- **Chronological Split:** Train (`2009–2010`, `n = 3,270`) → Test (`2010-12-10` to `2011-09-10` predicting Q4 `2011-09-11` to `2011-12-09`, `n = 3,248`)
+
+| Model / Baseline (Test `n = 3,248`) | MAE (£) | RMSE (£) | R² |
+|---|---:|---:|---:|
+| Mean Baseline | 935.35 | 4,069.36 | -0.0002 |
+| Median Baseline | 775.43 | 4,109.58 | -0.0201 |
+| Simple OLS (`hist_spending` only) | 596.71 | 2,732.93 | 0.5489 |
+| **Linear Regression (Full Pipeline)** | **586.61** | **2,726.22** | **0.5511** |
+
+### 2. Future Repeat Purchase — Logistic Regression ([`logistic_regression_results.csv`](reports/logistic_regression_results.csv))
+- **Pipeline:** `SimpleImputer(median)` → `signed_log1p` → `StandardScaler()` → `LogisticRegression(max_iter=1000)`
+
+| Operating Point (Test `n = 3,248`) | Threshold | Accuracy | Precision | Recall | F1 | ROC-AUC | PR-AUC |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Majority Class Baseline | 0.50 | 0.5764 | 0.5764 | 1.0000 | 0.7312 | 0.5000 | 0.5764 |
+| **Signed-Log1p LogReg (Default)** | **0.50** | **0.6832** | **0.7234** | **0.7292** | **0.7263** | **0.7471** | **0.8178** |
+| Balanced Precision (`CV-tuned`) | 0.56 | 0.6786 | 0.7534 | 0.6576 | 0.7022 | 0.7471 | 0.8178 |
+| High-Recall / Max-F1 (`CV-tuned`) | 0.34 | 0.6155 | 0.6059 | 0.9519 | 0.7405 | 0.7471 | 0.8178 |
+
+### 3. Product Recommendation — Item-Based Cosine KNN ([`knn_recommender_results.csv`](reports/knn_recommender_results.csv))
+- **Configuration:** Cosine similarity over `log1p(quantity)` CSR matrix (`5,851` customers × `4,200` merchandise SKUs with `>= 5` training buyers, `n_neighbors = 25`)
+
+| Holdout Method (`K = 10`, Exclude Seen, `n = 2,196`) | Precision@10 | Recall@10 | Hit Rate@10 | Catalog Coverage |
+|---|---:|---:|---:|---:|
+| Popularity Baseline | 0.0412 | 0.0168 | 29.10% | 1.80% (`80` SKUs) |
+| User-Based KNN (Cosine) | 0.0593 | 0.0304 | 35.97% | 23.28% (`1,035` SKUs) |
+| **Item-Based KNN (Cosine)** | **0.0668** | **0.0355** | **38.48%** | **24.72% (`1,099` SKUs)** |
+
+### 4. Customer Segmentation — K-Means RFM Clustering ([`kmeans_cluster_summary.csv`](reports/kmeans_cluster_summary.csv))
+- **Configuration:** `FunctionTransformer(np.log1p)` → `StandardScaler()` → `KMeans(n_clusters=4)` (`Silhouette = 0.3668` beating `K=3` at `0.3472` and `K=5` at `0.3459`; `40` non-positive spenders isolated cleanly into `ClusterID = -1`)
+
+| Cluster | Segment | Customers | Share | Median R (d) | Median F | Median M (£) | Revenue Share |
+|---:|---|---:|---:|---:|---:|---:|---:|
+| `0` | **High-Value Loyal** | 1,193 | 20.33% | 17.0 | 13.0 | £4,888.75 | **74.16%** |
+| `1` | **At-Risk Established** | 1,446 | 24.64% | 185.0 | 5.0 | £1,422.08 | **16.01%** |
+| `2` | **Recent / Growing** | 1,256 | 21.40% | 24.5 | 3.0 | £709.28 | 6.34% |
+| `3` | **Dormant / Low-Engagement** | 1,934 | 32.95% | 403.0 | 1.0 | £265.41 | 3.69% |
+| `-1` | **Net-Returned / Zero-Spend** | 40 | 0.68% | 426.5 | 1.0 | £0.00 | -0.19% |
+
+---
+
+## Interactive Streamlit Dashboard (`11` Pages)
+
+Organized into four sidebar groups inside [`app/app.py`](app/app.py) with light BI styling ([`.streamlit/config.toml`](.streamlit/config.toml), [`app/utils/theme.py`](app/utils/theme.py)) and CSV exports on every analytical view:
+
+| Navigation Group | Pages | Core Features |
+|---|---|---|
+| **Overview** | 1. Home (`p01_home.py`) | Executive KPI cards, Monthly Gross vs. Net Revenue chart, pipeline summary & navigation guide |
+| **Business Analytics** | 2. Sales (`p02_sales.py`)<br>3. Customers (`p03_customers.py`)<br>4. Products (`p04_products.py`)<br>5. Countries (`p05_countries.py`) | Year/country/scope filters, weekday & hourly cadence, top accounts & spend/frequency histograms, SKU search & bubble charts, UK vs. international treemap, CSV downloads |
+| **Predictive & Recommender ML** | 6. Future Spending (`p06_future_spending.py`)<br>7. Purchase Prediction (`p07_purchase_pred.py`)<br>8. Product Recommendation (`p08_recommendations.py`)<br>9. Customer Segmentation (`p09_segmentation.py`) | Cohort vs. live What-If spend simulator, threshold tuning (`0.10–0.90`) + live confusion metrics, Item-KNN + cold-start fallback & co-purchase lookup, PCA cluster viewer + live RFM scorer |
+| **Evaluation & Governance** | 10. Model Performance (`p10_model_perf.py`)<br>11. Data Quality (`p11_data_quality.py`) | Side-by-side baseline comparison tabs + diagnostic plots (`05`–`08`), unified evaluation report, missingness/anomaly charts, full cleaning audit |
+
+---
+
+## Project Folder Structure
+
+<details>
+<summary><b>Click to inspect the complete repository layout</b></summary>
 
 ```text
-E-Commerce-Customer-Analytics/
-├── .streamlit/                     # Streamlit Light BI theme & telemetry configuration
-│   └── config.toml
-├── .venv/                          # Local Python virtual environment (excluded from Git)
-├── .vscode/                        # Local editor Python interpreter settings
-│   └── settings.json
-├── app/                            # Multi-page Streamlit interactive dashboard
-│   ├── app.py                      # Main entrypoint (st.navigation across 11 pages)
-│   ├── components/
-│   │   └── ui.py                   # KPI cards, page headers, callouts, CSV download button
-│   ├── pages/                      # 11 modular Streamlit dashboard views (p01–p11)
-│   │   ├── p01_home.py
-│   │   ├── p02_sales.py
-│   │   ├── p03_customers.py
-│   │   ├── p04_products.py
-│   │   ├── p05_countries.py
-│   │   ├── p06_future_spending.py
-│   │   ├── p07_purchase_pred.py
-│   │   ├── p08_recommendations.py
-│   │   ├── p09_segmentation.py
-│   │   ├── p10_model_perf.py
-│   │   └── p11_data_quality.py
-│   └── utils/
-│       ├── data_loader.py          # Cached analytics, report, and .joblib model loaders
-│       └── theme.py                # Consistent palette, CSS styles, Plotly helper
-├── dataset/                        # Raw CSV (read-only) & derived analytical tables
-│   ├── Ecommerce.csv
+Ecommerce_Consumer_Behavior_Analysis/
+├── .streamlit/config.toml              # Light executive BI theme & browser config
+├── app/
+│   ├── app.py                          # Multi-page Streamlit entrypoint (st.navigation)
+│   ├── components/ui.py                # Reusable KPI cards, banners, pills, CSV exports
+│   ├── pages/p01_home.py .. p11_data_quality.py
+│   └── utils/{data_loader,theme}.py    # Cached loaders (@st.cache_data/resource) & CSS/Plotly styling
+├── dataset/
+│   ├── Ecommerce.csv                   # Raw immutable source CSV (SHA-256 verified)
 │   └── processed/
-│       ├── cleaned_online_retail.csv
 │       ├── returns_and_cancellations.csv
-│       ├── sales_transactions.csv
-│       └── analytics/
-│           ├── country_analytics.csv
-│           ├── customer_analytics.csv
-│           ├── customer_segments.csv
-│           ├── monthly_sales.csv
-│           ├── product_analytics.csv
-│           └── transaction_features.csv
-├── models/                         # Serialized Scikit-Learn & recommender artifacts
-│   ├── kmeans_pipeline.joblib
-│   ├── knn_recommender.joblib
-│   ├── linear_regression_pipeline.joblib
-│   └── logistic_regression_pipeline.joblib
-├── notebooks/                      # Executed analytical & modeling notebooks (01–08)
-│   ├── 01_Data_Inspection.ipynb
-│   ├── 02_Data_Cleaning.ipynb
-│   ├── 03_Feature_Engineering.ipynb
-│   ├── 04_Exploratory_Data_Analysis.ipynb
-│   ├── 05_Linear_Regression.ipynb
-│   ├── 06_Logistic_Regression.ipynb
-│   ├── 07_KNN_Recommendation.ipynb
-│   └── 08_KMeans_Customer_Segmentation.ipynb
-├── reports/                        # Structured CSV metrics & Markdown evaluation reports
-│   ├── data_cleaning_report.md
-│   ├── data_quality_report.csv
-│   ├── data_quality_report.md
-│   ├── eda_business_insights.md
-│   ├── final_project_report.md
-│   ├── kmeans_cluster_summary.csv
-│   ├── knn_recommender_results.csv
-│   ├── linear_regression_results.csv
-│   ├── logistic_regression_results.csv
-│   └── model_evaluation_summary.md
-├── src/                            # Reusable Python source modules
-│   ├── analysis/
-│   │   └── eda_metrics.py
-│   ├── data/
-│   │   ├── audit.py
-│   │   └── cleaning.py
-│   ├── features/
-│   │   └── engineering.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── classification.py
-│   │   ├── inference.py
-│   │   ├── recommender.py
-│   │   ├── regression.py
-│   │   └── segmentation.py
-│   └── utils/
-│       └── paths.py
-├── tests/                          # Automated unit & headless Streamlit dashboard tests
-│   ├── test_classification.py
-│   ├── test_data_cleaning.py
-│   ├── test_eda_metrics.py
-│   ├── test_feature_engineering.py
-│   ├── test_inference.py
-│   ├── test_recommender.py
-│   ├── test_regression.py
-│   ├── test_segmentation.py
-│   └── test_streamlit_app.py
-├── visualizations/                 # Exported static PNG plots & interactive HTML charts
+│       └── analytics/{country,customer,customer_segments,monthly_sales,product_analytics}.csv
+├── models/                             # Serialized .joblib pipelines (LR, LogReg, KNN, K-Means)
+├── notebooks/                          # Executed Jupyter notebooks (01–08)
+├── reports/
+│   ├── final_project_report.md         # Structured 15-section academic report
+│   ├── model_evaluation_summary.md     # Unified ML verification summary
+│   └── *.{csv,md}                      # Audit, cleaning, EDA & benchmark metric files
+├── src/
+│   ├── analysis/eda_metrics.py
+│   ├── data/{audit,cleaning}.py
+│   ├── features/engineering.py
+│   ├── models/{classification,inference,recommender,regression,segmentation}.py
+│   └── utils/paths.py
+├── tests/                              # 9 unittest + headless Streamlit AppTest modules
+├── visualizations/                     # 25 exported PNG & interactive HTML figures
 ├── .gitignore
 ├── README.md
 └── requirements.txt
 ```
 
----
-
-## 7. Installation Instructions
-
-Open Windows PowerShell inside the project root (`E-Commerce-Customer-Analytics`):
-
-```powershell
-# 1. Create a virtual environment (if setting up from scratch)
-python -m venv .venv
-
-# 2. Install exact pinned dependencies into .venv (never install globally)
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-
-# 3. Verify package integrity and automated test suite
-.\.venv\Scripts\python.exe -m pip check
-.\.venv\Scripts\python.exe -m unittest discover -s tests -t . -v
-```
+</details>
 
 ---
 
-## 8. Environment Setup
+## Limitations & Future Improvements
 
-### Register the Local Jupyter Kernel
-
-```powershell
-.\.venv\Scripts\python.exe -m ipykernel install --user --name ecommerce-analytics --display-name "Python (.venv - E-Commerce Analytics)"
-```
-
-### IDE Configuration (VS Code / Antigravity)
-
-- **Python Interpreter:** Set in `.vscode/settings.json` to `${workspaceFolder}/.venv/Scripts/python.exe` (Command Palette → `Python: Select Interpreter`).
-- **Jupyter Kernel:** Choose `Python (.venv - E-Commerce Analytics)` via the top-right `Select Kernel` menu.
-- **Windows PowerShell Note:** If PowerShell script execution policies or Windows Application Control block pip-generated `.exe` wrappers inside `.venv\Scripts\` (such as `streamlit.exe` or `jupyter.exe`), run tools via Python's `-m` flag instead:
-
-```powershell
-.\.venv\Scripts\python.exe -m streamlit run app/app.py
-.\.venv\Scripts\python.exe -m notebook
-```
+- **Missing Customer IDs (`22.3%` post-cleaning transactions):** Guest orders (including `100%` of Bermuda & Hong Kong) are preserved for revenue/product totals but cannot be scored by customer-level ML or collaborative filtering.
+- **Wholesale Target Outliers in OLS:** `54` extreme Q4 wholesale accounts (`> £5,000`) drive over `93%` of MSE (`RMSE = £2,726.22` vs. `£718.28` trimmed to the 99th percentile). Future work should explore a two-stage Hurdle model (`P(buy) × E[spend | buy]`) and gradient boosting (`HistGradientBoostingRegressor` / `LightGBM`).
+- **Partial Boundary Years & Recommender Cold-Start SKUs:** `2009` includes December only and `2011` stops at Dec 9; pure Item-KNN requires `>= 5` historical buyers per SKU, which a hybrid TF-IDF + co-purchase ranker could address alongside probabilistic GMM segmentation and month-over-month cluster migration tracking.
 
 ---
 
-## 9. How to Run Notebooks
+## Documentation & Reports
 
-Execute the notebooks sequentially so upstream cleaned datasets, feature tables, and saved models exist for downstream stages:
-
-1. `notebooks/01_Data_Inspection.ipynb` — Read-only data quality audit → `reports/data_quality_report.{csv,md}`
-2. `notebooks/02_Data_Cleaning.ipynb` — Rule-based cleaning & return separation → `dataset/processed/*.csv`, `reports/data_cleaning_report.md`
-3. `notebooks/03_Feature_Engineering.ipynb` — Transaction, Customer (RFM), Product, Country, and Monthly analytical tables → `dataset/processed/analytics/*.csv`
-4. `notebooks/04_Exploratory_Data_Analysis.ipynb` — Executive KPIs, trends, Pareto & RFM visuals → `reports/eda_business_insights.md`, `visualizations/`
-5. `notebooks/05_Linear_Regression.ipynb` — Chronological `275d → 90d` future spend model → `models/linear_regression_pipeline.joblib`
-6. `notebooks/06_Logistic_Regression.ipynb` — Chronological `275d → 90d` repeat purchase probability model → `models/logistic_regression_pipeline.joblib`
-7. `notebooks/07_KNN_Recommendation.ipynb` — Sparse Item-Based Cosine KNN recommender → `models/knn_recommender.joblib`
-8. `notebooks/08_KMeans_Customer_Segmentation.ipynb` — Log-scaled RFM K-Means segmentation (`K=4` + `ClusterID=-1`) → `models/kmeans_pipeline.joblib`, `customer_segments.csv`
-
-To re-execute any notebook cleanly from PowerShell using `nbconvert`:
-
-```powershell
-.\.venv\Scripts\python.exe -m nbconvert --to notebook --execute --inplace --ExecutePreprocessor.kernel_name=ecommerce-analytics notebooks/01_Data_Inspection.ipynb
-```
-
----
-
-## 10. How to Run the Dashboard
-
-From the project root:
-
-```powershell
-.\.venv\Scripts\python.exe -m streamlit run app/app.py
-```
-
-Open **`http://localhost:8501`** in Chrome/Edge/Firefox to access all **11 interactive pages**:
-
-| Section | Pages | Key Capabilities |
-|---|---|---|
-| **Overview** | 1. Home (`p01_home.py`) | Executive KPIs (`£19.27M` net revenue, `39,988` orders, `5,869` buyers, `4,746` SKUs), monthly gross vs. net chart, navigation guide |
-| **Business Analytics** | 2. Sales Analytics (`p02_sales.py`) | Filters by year, country, and scope (`All Valid`, `Merchandise Only`, `Normal Sales Only`); monthly, day-of-week & hourly demand; CSV export |
-| | 3. Customer Analytics (`p03_customers.py`) | Filters by segment, min orders, net spend; top customers, log10 spend & frequency distributions; CSV export |
-| | 4. Product Analytics (`p04_products.py`) | SKU/description search, reach threshold, revenue & quantity leaders, ASP bubble scatter; CSV export |
-| | 5. Country Analytics (`p05_countries.py`) | UK vs. 42 international markets toggle, horizontal bar comparisons, market-share treemap; CSV export |
-| **Predictive & Recommender ML** | 6. Future Spending Prediction (`p06_future_spending.py`) | Real test-cohort scoring + Interactive What-If Feature Simulator (`Linear Regression`) + batch CSV export |
-| | 7. Purchase Prediction (`p07_purchase_pred.py`) | Live threshold tuning slider (`0.10–0.90`), confusion metrics, customer propensity bar, score distribution; CSV export |
-| | 8. Product Recommendation (`p08_recommendations.py`) | Personalized Item-KNN top-N + popularity cold-start fallback + Similar Product Explorer (`find_similar_products`) |
-| | 9. Customer Segmentation (`p09_segmentation.py`) | Segment share & 2D PCA cluster scatter, cluster RFM table, customer lookup & custom RFM live scorer |
-| **Evaluation & Governance** | 10. Model Performance (`p10_model_perf.py`) | Independent evaluation tables, charts, Notebook 05–08 diagnostic PNGs, and unified summary report |
-| | 11. Data Quality (`p11_data_quality.py`) | Raw missingness & log-scale anomaly audit charts, complete `data_quality_report.csv` table, and cleaning report |
-
----
-
-## 11. Machine Learning Algorithms
-
-1. **Future Customer Spending Prediction (`src/models/regression.py`):**
-   - **Algorithm:** OLS `LinearRegression` inside a Scikit-Learn `Pipeline` (`SimpleImputer(strategy="median")` → `StandardScaler()` → `LinearRegression()`).
-   - **Leakage Control:** Strictly chronological `275`-day observation window (`<= cutoff`) predicting subsequent `90`-day Q4 net spending (`Train 2009–2010: n = 3,270`, `Test 2010–2011: n = 3,248`).
-2. **Future Purchase Prediction (`src/models/classification.py`):**
-   - **Algorithm:** Binary `LogisticRegression` (`SimpleImputer(median)` → signed `log1p` transform → `StandardScaler()` → `LogisticRegression(max_iter=1000)`).
-   - **Thresholding:** Evaluates default `0.50` alongside 5-fold Train-CV tuned thresholds (`0.56` balanced precision, `0.34` max-F1/high recall).
-3. **Product Recommendation System (`src/models/recommender.py`):**
-   - **Algorithm:** Item-Based Collaborative Filtering with **Cosine similarity** over sparse CSR `log1p(total_quantity)` matrices (merchandise SKUs with `>= 5` unique training buyers, `n_neighbors = 25`), selected empirically over User-Based KNN (`38.48%` vs. `35.97%` Hit Rate@10). Includes a popularity fallback for cold-start customers.
-4. **Customer Segmentation (`src/models/segmentation.py`):**
-   - **Algorithm:** Unsupervised **K-Means clustering** (`FunctionTransformer(np.log1p)` → `StandardScaler()` → `KMeans(n_clusters=4, n_init=20, random_state=42)`). Accounts with `MonetaryValue <= £0` (`40` customers) are isolated into `ClusterID = -1` (`Net-Returned / Zero-Spend`) before `log1p` transformation.
-
----
-
-## 12. Model Evaluation Results
-
-| Model | Evaluation Split | Key Metrics | Baseline Comparison |
-|---|---|---|---|
-| **Linear Regression** | Chronological Test (`n = 3,248`) | `MAE = £586.61`, `RMSE = £2,726.22`, `R² = 0.5511` | Beats Mean baseline (`RMSE = £4,069.36`, `R² = -0.0002`) and Median baseline (`MAE = £775.43`) |
-| **Logistic Regression (Signed-Log1p)** | Chronological Test (`n = 3,248`, `thr = 0.50`) | `Accuracy = 0.6832`, `Precision = 0.7234`, `Recall = 0.7292`, `F1 = 0.7263`, `ROC-AUC = 0.7471`, `PR-AUC = 0.8178` | Beats Majority baseline (`Accuracy = 0.5764`, `ROC-AUC = 0.5000`, `PR-AUC = 0.5764`) |
-| **Item-Based KNN (Cosine)** | Chronological Holdout (`@10`, new items, `n = 2,196`) | `Precision@10 = 0.0668`, `Recall@10 = 0.0355`, `Hit Rate@10 = 38.48%`, `Coverage@10 = 24.72%` (`1,099` SKUs) | Beats Popularity baseline (`Hit Rate@10 = 29.10%`, `Coverage = 1.80%`) and User-Based KNN (`Hit Rate@10 = 35.97%`) |
-| **K-Means RFM (`K = 4` + `-1`)** | Positive Spenders (`n = 5,829`) + `40` Isolated | `Silhouette Score = 0.3668`, `Inertia = 4,835.87`, `2D PCA Variance = 95.19%` | Beats `K = 3` (`0.3472`) and `K = 5` (`0.3459`); isolates `4` distinct personas (`74.16%` rev in `High-Value Loyal`) |
-
----
-
-## 13. Limitations
-
-1. **Guest / Unregistered Transactions:** `228,994` cleaned valid rows (`22.3%` of transactions, `£2.97M` net revenue—including `100%` of Bermuda and Hong Kong orders) have no `Customer ID` and therefore cannot be scored by customer-level ML models or collaborative filtering without fabricating identities.
-2. **Wholesale Extreme Outliers in OLS Regression:** `54` extreme high-volume Q4 buyers (`> £5,000`) and sudden reactivations (e.g., Customer `14096`) drive over `93%` of test MSE (`RMSE = £2,726.22` vs. `£718.28` when trimmed to the `99th` target percentile), while `42.6%` of test accounts spend `£0` in Q4.
-3. **Partial Calendar Bounds:** `2009` covers December only (`£797.4k`), and `2011` stops on `2011-12-09`, preventing raw annual totals from representing complete 12-month comparisons.
-4. **Pure Implicit Co-Purchase Constraints:** Item-Based KNN requires `>= 5` historical customers per SKU and cannot recommend newly launched SKUs with sparse co-purchase edges using content alone.
-5. **Linear Classification & Static Segmentation:** Logistic Regression imposes linear log-odds boundaries, and K-Means relies on a single global RFM snapshot (`2011-12-10` reference date) rather than dynamic longitudinal transitions.
-
----
-
-## 14. Future Improvements
-
-1. **Two-Stage Hurdle Spending Model:** Combine purchase propensity (`P(buy)`) with a regularized or tree-based conditional spend estimator (`Ridge`, `HistGradientBoostingRegressor`, or `log1p`-target regression) to handle zero-inflation and B2B tails.
-2. **Gradient-Boosted Purchase Classifiers:** Test `HistGradientBoostingClassifier` / `LightGBM` with inter-purchase interval variance and seasonal indicators, calibrated via isotonic regression.
-3. **Hybrid Recommender System:** Blend Item-Based Cosine similarity with TF-IDF product description similarity and recency weighting so new/niche SKUs (`< 5` buyers) receive meaningful cold-start recommendations.
-4. **Probabilistic & Longitudinal Segmentation:** Evaluate Gaussian Mixture Models (GMM) for soft membership probabilities and add month-over-month cluster migration tracking.
-5. **Scheduled Re-Training & Batch Scoring CLI:** Automate incremental data ingestion, drift checks, and periodic model re-training as new transaction exports arrive.
+- **Complete Academic Report:** [`reports/final_project_report.md`](reports/final_project_report.md)
+- **Unified ML Verification Report:** [`reports/model_evaluation_summary.md`](reports/model_evaluation_summary.md)
+- **Data Audit & Cleaning Logs:** [`reports/data_quality_report.md`](reports/data_quality_report.md) • [`reports/data_cleaning_report.md`](reports/data_cleaning_report.md) • [`reports/eda_business_insights.md`](reports/eda_business_insights.md)
