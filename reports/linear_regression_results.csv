@@ -1,0 +1,8 @@
+model_name,split,n_samples,mae,mse,rmse,r2_score
+Baseline (Mean),test,3248,935.3463,16559660.6013,4069.3563,-0.0002
+Baseline (Median),test,3248,775.4332,16888686.1801,4109.5847,-0.0201
+Simple OLS (hist_spending only),test,3248,596.7063,7468919.9337,2732.9325,0.5489
+Linear Regression (Full Pipeline),train,3270,565.7596,2450783.3686,1565.4978,0.7132
+Linear Regression (Full Pipeline),test,3248,586.6102,7432257.6032,2726.2167,0.5511
+Linear Regression (Trained w/o Top 1% Target Outliers),test,3248,594.4684,9037143.6885,3006.1842,0.4541
+Linear Regression (Full Pipeline),test_excl_top1pct_outliers,3215,429.2261,515931.3309,718.2836,0.3828

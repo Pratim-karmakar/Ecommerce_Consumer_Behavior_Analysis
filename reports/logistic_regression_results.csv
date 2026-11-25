@@ -1,0 +1,8 @@
+model_name,split,threshold,n_samples,accuracy,balanced_accuracy,precision,recall,f1_score,roc_auc,pr_auc,tn,fp,fn,tp
+Baseline (Majority Class),test,0.5,3248,0.5764,0.5,0.5764,1.0,0.7312,0.5,0.5764,0,1376,0,1872
+Logistic Regression (Raw Scaled),test,0.5,3248,0.6881,0.6846,0.7398,0.7078,0.7235,0.7475,0.8149,910,466,547,1325
+Logistic Regression (Signed-Log1p),train_oof_cv,0.5,3270,0.667,0.6559,0.7114,0.7222,0.7168,0.7243,0.7918,803,559,530,1378
+Logistic Regression (Signed-Log1p),train_full,0.5,3270,0.6673,0.6557,0.7107,0.7248,0.7177,0.7267,0.7936,799,563,525,1383
+"Logistic Regression (Signed-Log1p, thr=0.50)",test,0.5,3248,0.6832,0.6749,0.7234,0.7292,0.7263,0.7471,0.8178,854,522,507,1365
+Logistic Regression (Balanced thr=0.56),test,0.56,3248,0.6786,0.6824,0.7534,0.6576,0.7022,0.7471,0.8178,973,403,641,1231
+Logistic Regression (Max-F1 thr=0.34),test,0.34,3248,0.6155,0.5548,0.6059,0.9519,0.7405,0.7471,0.8178,217,1159,90,1782

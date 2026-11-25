@@ -1,0 +1,9 @@
+model_name,k,exclude_seen,n_eval_customers,precision_at_k,recall_at_k,hit_rate_at_k,coverage_pct,unique_items_recommended
+Popularity Baseline,5,True,2196,0.0476,0.0106,0.199,1.03,46
+Popularity Baseline,10,True,2196,0.0412,0.0168,0.291,1.8,80
+User-Based KNN (Cosine),5,True,2196,0.0703,0.0188,0.2609,17.14,762
+User-Based KNN (Cosine),10,True,2196,0.0593,0.0304,0.3597,23.28,1035
+Item-Based KNN (Cosine),5,True,2196,0.0721,0.0197,0.26,17.46,776
+Item-Based KNN (Cosine),10,True,2196,0.0668,0.0355,0.3848,24.72,1099
+Item-Based KNN (Incl. Repeats),5,False,2272,0.2123,0.0369,0.5163,18.97,843
+Item-Based KNN (Incl. Repeats),10,False,2272,0.1952,0.0681,0.6461,26.68,1186

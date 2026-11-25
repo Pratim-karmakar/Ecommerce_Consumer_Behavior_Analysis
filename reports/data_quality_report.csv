@@ -1,0 +1,26 @@
+metric,category,value,percentage_of_rows,notes
+Total rows,Dataset Dimensions,1067371,100.0,Combined 2009-2010 and 2010-2011 transactions
+Total columns,Dataset Dimensions,8,,"Expected schema: Invoice, StockCode, Description, Quantity, InvoiceDate, Price, Customer ID, Country"
+Missing values (total cells),Missing Values,247389,2.8972,Sum of null cells across all columns
+Missing Customer ID records,Missing Values,243007,22.7669,Guest/unregistered checkouts or internal stock adjustments
+Missing Description records,Missing Values,4382,0.4105,"Rows with null product description (4,382 also lack Customer ID)"
+Duplicate records (exact rows),Duplicates,34335,3.2168,"Includes 22,844 duplicates in Dec 1-9, 2010 sheet overlap window"
+Invalid or unusual records (union),Invalid / Unusual Values,12963,1.2145,"Rows with price<=0, non-C qty<0, A-invoices, non-standard StockCode, lowercase notes, or Unspecified country"
+Cancelled invoice records (C-prefix),Cancellations,19494,1.8264,"Across 8,292 unique C-prefixed invoices (1 has Quantity > 0)"
+Negative quantity records (all),Quantity Anomalies,22950,2.1501,"19,493 in C-invoices + 3,457 non-C inventory adjustments"
+Non-C negative quantity records,Quantity Anomalies,3457,0.3239,"Warehouse write-offs/damages (3,457 Price==0; 3,457 missing Customer ID)"
+Zero quantity records,Quantity Anomalies,0,0.0,Rows with Quantity == 0
+Negative price records,Price Anomalies,5,0.0005,"Adjust bad debt records (StockCode='B', A-prefixed invoices)"
+Zero price records,Price Anomalies,6202,0.5811,"Includes 3,457 non-C negative qty adjustments + 2,745 positive qty zero-price items"
+Bad debt adjustment records (A-prefix),Invalid / Unusual Values,6,0.0006,Across 6 unique A-prefixed accounting adjustment invoices
+Non-standard StockCode records,Invalid / Unusual Values,6093,0.5708,Fees/postage/manual/gift/test codes not matching 5-digit pattern
+Test StockCode records (TEST*),Invalid / Unusual Values,17,0.0016,"Internal test product entries (TEST001, TEST002)"
+Lowercase/note Description records,Invalid / Unusual Values,823,0.0771,"Warehouse status notes like 'check', '?', 'damages', 'lost'"
+Unspecified country records,Invalid / Unusual Values,756,0.0708,Rows with Country == 'Unspecified'
+Unparseable InvoiceDate records,Date Audit,0,0.0,InvoiceDate values failing datetime parsing
+Date range,Date Audit,2009-12-01 07:45:00 to 2011-12-09 12:50:00,,Spans combined 2009-2010 and 2010-2011 sheets
+Number of unique invoices,Entity Counts,53628,,"45,330 standard + 8,292 C-cancelled + 6 A-adjustments"
+Number of customers,Entity Counts,5942,,Distinct non-null Customer ID values
+Number of products (StockCode raw),Entity Counts,5305,,"5,131 unique after stripping whitespace and uppercasing"
+Number of product descriptions,Entity Counts,5655,,Distinct non-null stripped Description values
+Number of countries,Entity Counts,43,,Includes 'Unspecified'

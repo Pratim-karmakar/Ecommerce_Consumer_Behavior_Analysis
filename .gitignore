@@ -1,0 +1,48 @@
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+build/
+dist/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Testing & linting caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Environment variables & Streamlit secrets
+.env
+.env.*
+.streamlit/secrets.toml
+
+# Logs
+*.log
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Derived transaction CSVs exceeding GitHub's 100 MB file limit (regenerable via Notebooks 02 & 03 from dataset/Ecommerce.csv)
+dataset/processed/cleaned_online_retail.csv
+dataset/processed/sales_transactions.csv
+dataset/processed/analytics/transaction_features.csv
+
+# Optional: uncomment below if raw dataset or trained model files also need excluding
+# dataset/*.csv
+# models/*.joblib
+# models/*.pkl
