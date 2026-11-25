@@ -251,3 +251,24 @@ Ecommerce_Consumer_Behavior_Analysis/
 - **Complete Academic Report:** [`reports/final_project_report.md`](reports/final_project_report.md)
 - **Unified ML Verification Report:** [`reports/model_evaluation_summary.md`](reports/model_evaluation_summary.md)
 - **Data Audit & Cleaning Logs:** [`reports/data_quality_report.md`](reports/data_quality_report.md) • [`reports/data_cleaning_report.md`](reports/data_cleaning_report.md) • [`reports/eda_business_insights.md`](reports/eda_business_insights.md)
+
+---
+
+## Contributors
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/Deb-Kumar">
+        <img src="https://github.com/Deb-Kumar.png?size=80" width="80px;" alt="Deb-Kumar"/><br />
+        <sub><b>Deb-Kumar</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Pratim-karmakar">
+        <img src="https://github.com/Pratim-karmakar.png?size=80" width="80px;" alt="Pratim-karmakar"/><br />
+        <sub><b>Pratim-karmakar</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
