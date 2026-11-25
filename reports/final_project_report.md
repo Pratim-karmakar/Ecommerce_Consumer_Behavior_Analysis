@@ -123,7 +123,7 @@ All supervised and recommender models enforce chronological train/test temporal 
    - Fits Cosine `NearestNeighbors(metric="cosine", algorithm="brute", n_neighbors=25)` over item vectors; evaluated chronologically on `Train (< 2011-09-11)` vs. `Holdout (>= 2011-09-11)` (`n = 2,196` new-item customers / `2,272` repeat-included). Falls back cleanly to global bestselling rank on cold-start customers.
 3. **Customer Segmentation (`K-Means RFM`):**
    - Evaluates `K = 2..9` on `Recency`, `Frequency`, and `MonetaryValue` transformed with `np.log1p` and `StandardScaler`.
-   - Excludes `40` accounts with `MonetaryValue <= £0` before clustering and assigns them deterministically to `ClusterID = -1` (`Net-Returned / Zero-Spend`) so log-domain math never receives invalid inputs.
+   - Excludes `40` accounts with `MonetaryValue <= £0` before clustering and assigns them deterministically to `ClusterID = -1` (`Net-Return Accounts`) so log-domain math never receives invalid inputs.
 
 ---
 
@@ -166,11 +166,11 @@ All supervised and recommender models enforce chronological train/test temporal 
 
 | ClusterID | Segment Name | Customers | Share (%) | Median R (d) | Median F | Median M (£) | Revenue (£) | Rev Share (%) |
 |---:|---|---:|---:|---:|---:|---:|---:|---:|
-| `0` | High-Value Loyal | 1,193 | 20.33% | 17.0 | 13.0 | 4,888.75 | 12,128,760.30 | 74.16% |
-| `1` | At-Risk Established | 1,446 | 24.64% | 185.0 | 5.0 | 1,422.08 | 2,618,355.68 | 16.01% |
-| `2` | Recent / Growing | 1,256 | 21.40% | 24.5 | 3.0 | 709.28 | 1,036,769.16 | 6.34% |
-| `3` | Dormant / Low-Engagement | 1,934 | 32.95% | 403.0 | 1.0 | 265.41 | 603,196.45 | 3.69% |
-| `-1` | Net-Returned / Zero-Spend | 40 | 0.68% | 426.5 | 1.0 | 0.00 | -31,515.23 | -0.19% |
+| `0` | VIP Accounts | 1,193 | 20.33% | 17.0 | 13.0 | 4,888.75 | 12,128,760.30 | 74.16% |
+| `1` | Lapsing Regulars | 1,446 | 24.64% | 185.0 | 5.0 | 1,422.08 | 2,618,355.68 | 16.01% |
+| `2` | Active Growth | 1,256 | 21.40% | 24.5 | 3.0 | 709.28 | 1,036,769.16 | 6.34% |
+| `3` | Dormant Buyers | 1,934 | 32.95% | 403.0 | 1.0 | 265.41 | 603,196.45 | 3.69% |
+| `-1` | Net-Return Accounts | 40 | 0.68% | 426.5 | 1.0 | 0.00 | -31,515.23 | -0.19% |
 
 ---
 
@@ -185,7 +185,7 @@ Built cleanly in `app/` without duplicating notebook logic:
 
 ## 12. Results and Discussion
 
-- **Revenue Concentration Requires Account-Tiered Strategy:** Just `1,193` `High-Value Loyal` customers (`20.33%` of buyers) generate `74.16%` (`£12.13M`) of customer-attributed net revenue, while `1,446` `At-Risk Established` accounts (`16.01%` of spend, median Recency `185` days) represent the highest-leverage win-back audience.
+- **Revenue Concentration Requires Account-Tiered Strategy:** Just `1,193` `VIP Accounts` (`20.33%` of buyers) generate `74.16%` (`£12.13M`) of customer-attributed net revenue, while `1,446` `Lapsing Regulars` (`16.01%` of spend, median Recency `185` days) represent the highest-leverage win-back audience.
 - **Chronological Models Beat Baselines Cleanly:** All three supervised/recommender systems outperform non-trivial historical baselines (`+0.551` R² gain over mean predictor, `+0.247` ROC-AUC gain over majority class, and `+9.38` percentage points Hit Rate@10 + `13.7×` higher SKU coverage vs. Popularity baseline).
 - **Unified Inference API Readiness:** Every model reloads cleanly from disk through `src/models/inference.py` and gracefully handles invalid types, missing model files (`ModelLoadError`), unseen users (popularity fallback), unknown SKUs (`UnknownProductError`), missing numeric features (saved `SimpleImputer`), and negative RFM values (`ClusterID = -1`).
 

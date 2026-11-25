@@ -66,12 +66,12 @@ class TestModelIntegrationAndErrorHandling(unittest.TestCase):
         self.assertEqual(len(sim_df), 5)
 
         seg_vip = assign_customer_segment({"Recency": 15, "Frequency": 15, "MonetaryValue": 5500.0}, model=self.km_model)
-        self.assertEqual(seg_vip.iloc[0]["Segment"], "High-Value Loyal")
+        self.assertEqual(seg_vip.iloc[0]["Segment"], "VIP Accounts")
         self.assertEqual(int(seg_vip.iloc[0]["ClusterID"]), 0)
 
         seg_zero = assign_customer_segment({"Recency": 200, "Frequency": 1, "MonetaryValue": -25.0}, model=self.km_model)
         self.assertEqual(int(seg_zero.iloc[0]["ClusterID"]), -1)
-        self.assertEqual(seg_zero.iloc[0]["Segment"], "Net-Returned / Zero-Spend")
+        self.assertEqual(seg_zero.iloc[0]["Segment"], "Net-Return Accounts")
 
     def test_missing_model_file_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

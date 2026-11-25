@@ -15,11 +15,11 @@ PALETTE = {
 }
 
 SEGMENT_COLORS = {
-    "High-Value Loyal": "#1E3A8A",
-    "At-Risk Established": "#D97706",
-    "Recent / Growing": "#0F766E",
-    "Dormant / Low-Engagement": "#64748B",
-    "Net-Returned / Zero-Spend": "#DC2626",
+    "VIP Accounts": "#1E3A8A",
+    "Lapsing Regulars": "#D97706",
+    "Active Growth": "#0F766E",
+    "Dormant Buyers": "#64748B",
+    "Net-Return Accounts": "#DC2626",
 }
 
 

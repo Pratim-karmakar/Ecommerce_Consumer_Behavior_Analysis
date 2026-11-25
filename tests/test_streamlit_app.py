@@ -80,7 +80,7 @@ class TestStreamlitDashboard(unittest.TestCase):
         at_seg.radio(key="seg_mode").set_value("Score Custom RFM Values").run()
         at_seg.number_input(key="seg_sim_m").set_value(-50.0).run()
         self.assertFalse(at_seg.exception)
-        self.assertTrue(any("Net-Returned / Zero-Spend" in s.value for s in at_seg.success))
+        self.assertTrue(any("Net-Return Accounts" in s.value for s in at_seg.success))
 
 
 if __name__ == "__main__":

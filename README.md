@@ -176,11 +176,11 @@ All predictors expose unified, schema-validated functions in [`src/models/infere
 
 | Cluster | Segment | Customers | Share | Median R (d) | Median F | Median M (£) | Revenue Share |
 |---:|---|---:|---:|---:|---:|---:|---:|
-| `0` | **High-Value Loyal** | 1,193 | 20.33% | 17.0 | 13.0 | £4,888.75 | **74.16%** |
-| `1` | **At-Risk Established** | 1,446 | 24.64% | 185.0 | 5.0 | £1,422.08 | **16.01%** |
-| `2` | **Recent / Growing** | 1,256 | 21.40% | 24.5 | 3.0 | £709.28 | 6.34% |
-| `3` | **Dormant / Low-Engagement** | 1,934 | 32.95% | 403.0 | 1.0 | £265.41 | 3.69% |
-| `-1` | **Net-Returned / Zero-Spend** | 40 | 0.68% | 426.5 | 1.0 | £0.00 | -0.19% |
+| `0` | **VIP Accounts** | 1,193 | 20.33% | 17.0 | 13.0 | £4,888.75 | **74.16%** |
+| `1` | **Lapsing Regulars** | 1,446 | 24.64% | 185.0 | 5.0 | £1,422.08 | **16.01%** |
+| `2` | **Active Growth** | 1,256 | 21.40% | 24.5 | 3.0 | £709.28 | 6.34% |
+| `3` | **Dormant Buyers** | 1,934 | 32.95% | 403.0 | 1.0 | £265.41 | 3.69% |
+| `-1` | **Net-Return Accounts** | 40 | 0.68% | 426.5 | 1.0 | £0.00 | -0.19% |
 
 ---
 

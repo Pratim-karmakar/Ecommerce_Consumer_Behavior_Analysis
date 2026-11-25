@@ -34,22 +34,22 @@ def render() -> None:
         st.error(f"Could not load segmentation assets: {exc}")
         return
 
-    loyal_row = summary_df[summary_df["Segment"] == "High-Value Loyal"].iloc[0]
-    risk_row = summary_df[summary_df["Segment"] == "At-Risk Established"].iloc[0]
+    loyal_row = summary_df[summary_df["Segment"] == "VIP Accounts"].iloc[0]
+    risk_row = summary_df[summary_df["Segment"] == "Lapsing Regulars"].iloc[0]
 
     render_kpi_row(
         [
             ("Clusters + Isolated", "4 + 1", "K=4 RFM clusters | Silhouette 0.3668"),
-            ("High-Value Loyal Share", f"{loyal_row['RevenueSharePct']:.1f}% Rev", f"{int(loyal_row['CustomerCount']):,} customers ({loyal_row['CustomerSharePct']:.1f}%)"),
-            ("At-Risk Established Pool", f"{int(risk_row['CustomerCount']):,} Buyers", f"Median Recency {risk_row['RecencyMedian']:.0f} days"),
-            ("Net-Returned / Zero-Spend", "40 Accounts", "Isolated safely (Monetary <= £0)"),
+            ("VIP Accounts Share", f"{loyal_row['RevenueSharePct']:.1f}% Rev", f"{int(loyal_row['CustomerCount']):,} customers ({loyal_row['CustomerSharePct']:.1f}%)"),
+            ("Lapsing Regulars Pool", f"{int(risk_row['CustomerCount']):,} Buyers", f"Median Recency {risk_row['RecencyMedian']:.0f} days"),
+            ("Net-Return Accounts", "40 Accounts", "Isolated safely (Monetary <= £0)"),
         ]
     )
 
     render_beginner_note(
         "How Segments Were Formed",
         "Because Frequency and MonetaryValue are heavily skewed, RFM metrics were log1p-transformed and standardized before clustering. "
-        "K=4 achieved the best Silhouette peak (0.3668) above K=3 and K=5 while separating At-Risk Established buyers from Recent Growing buyers.",
+        "K=4 achieved the best Silhouette peak (0.3668) above K=3 and K=5 while separating Lapsing Regulars from Active Growth buyers.",
     )
 
     col_l, col_r = st.columns(2)

@@ -12,6 +12,14 @@ from sklearn.preprocessing import FunctionTransformer, StandardScaler
 
 RFM_COLUMNS: List[str] = ["Recency", "Frequency", "MonetaryValue"]
 
+SEGMENT_LABELS: Dict[str, str] = {
+    "champion": "VIP Accounts",
+    "at_risk": "Lapsing Regulars",
+    "growing": "Active Growth",
+    "dormant": "Dormant Buyers",
+    "non_positive": "Net-Return Accounts",
+}
+
 
 def evaluate_k_range(
     rfm_positive_df: pd.DataFrame, k_values: range = range(2, 10)
@@ -65,15 +73,15 @@ def _assign_evidence_based_labels(
     remaining = remaining.drop(index=dormant_id)
 
     label_map: Dict[int, str] = {
-        champion_id: "High-Value Loyal",
-        dormant_id: "Dormant / Low-Engagement",
+        champion_id: SEGMENT_LABELS["champion"],
+        dormant_id: SEGMENT_LABELS["dormant"],
     }
     if len(remaining) == 2:
-        # Compare remaining two by Recency: higher Recency & higher Monetary = At-Risk Established;
-        # lower Recency = Recent / Growing Buyers.
+        # Compare remaining two by Recency: higher Recency & higher Monetary = Lapsing Regulars;
+        # lower Recency = Active Growth.
         ids_sorted_rec = remaining.sort_values("med_recency", ascending=False).index.tolist()
-        label_map[int(ids_sorted_rec[0])] = "At-Risk Established"
-        label_map[int(ids_sorted_rec[1])] = "Recent / Growing"
+        label_map[int(ids_sorted_rec[0])] = SEGMENT_LABELS["at_risk"]
+        label_map[int(ids_sorted_rec[1])] = SEGMENT_LABELS["growing"]
     else:
         for idx, cid in enumerate(remaining.sort_values("med_mon", ascending=False).index):
             label_map[int(cid)] = f"Mid-Tier Segment {idx + 1}"
@@ -87,7 +95,7 @@ def fit_and_segment_customers(
     Fit K-Means on positive-MonetaryValue customers and assign clean segments across all customers.
 
     Customers with MonetaryValue <= 0 (net-returned / zero-net spending) are cleanly separated into
-    Cluster -1 ('Net-Returned / Zero-Spend') so they do not distort log1p transformations.
+    Cluster -1 ('Net-Return Accounts') so they do not distort log1p transformations.
     """
     df = customer_df.copy()
     pos_mask = df["MonetaryValue"] > 0
@@ -121,7 +129,7 @@ def fit_and_segment_customers(
 
     if len(non_pos_df) > 0:
         non_pos_df["ClusterID"] = -1
-        non_pos_df["Segment"] = "Net-Returned / Zero-Spend"
+        non_pos_df["Segment"] = SEGMENT_LABELS["non_positive"]
         non_pos_df["PCA1"] = np.nan
         non_pos_df["PCA2"] = np.nan
         segmented_df = pd.concat([pos_df, non_pos_df], ignore_index=True)

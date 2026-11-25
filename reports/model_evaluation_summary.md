@@ -59,11 +59,11 @@
 
 - **Setup:** `K = 4` clusters selected via Elbow inflection (`Inertia = 4,835.87`) and local Silhouette peak (**`0.3668`**, beating `K = 3` at `0.3472` and `K = 5` at `0.3459`) on `np.log1p`-scaled RFM (`n = 5,829` positive spenders; 2D PCA explains **`95.19%`** variance). `40` accounts with `MonetaryValue <= £0` are isolated as `ClusterID = -1`.
 - **Cluster Profiles (`n = 5,869` total):**
-  - **`0` — High-Value Loyal:** `1,193` (`20.33%`) | Medians: `R=17d, F=13, M=£4,888.75` | **`74.16%`** of net customer revenue (`£12.13M`)
-  - **`1` — At-Risk Established:** `1,446` (`24.64%`) | Medians: `R=185d, F=5, M=£1,422.08` | **`16.01%`** of net customer revenue (`£2.62M`)
-  - **`2` — Recent / Growing:** `1,256` (`21.40%`) | Medians: `R=24.5d, F=3, M=£709.28` | `6.34%` of net customer revenue (`£1.04M`)
-  - **`3` — Dormant / Low-Engagement:** `1,934` (`32.95%`) | Medians: `R=403d, F=1, M=£265.41` | `3.69%` of net customer revenue (`£0.60M`)
-  - **`-1` — Net-Returned / Zero-Spend:** `40` (`0.68%`) | Medians: `R=426.5d, F=1, M=£0.00` | `-0.19%` of net customer revenue (`-£31.5k`)
+  - **`0` — VIP Accounts:** `1,193` (`20.33%`) | Medians: `R=17d, F=13, M=£4,888.75` | **`74.16%`** of net customer revenue (`£12.13M`)
+  - **`1` — Lapsing Regulars:** `1,446` (`24.64%`) | Medians: `R=185d, F=5, M=£1,422.08` | **`16.01%`** of net customer revenue (`£2.62M`)
+  - **`2` — Active Growth:** `1,256` (`21.40%`) | Medians: `R=24.5d, F=3, M=£709.28` | `6.34%` of net customer revenue (`£1.04M`)
+  - **`3` — Dormant Buyers:** `1,934` (`32.95%`) | Medians: `R=403d, F=1, M=£265.41` | `3.69%` of net customer revenue (`£0.60M`)
+  - **`-1` — Net-Return Accounts:** `40` (`0.68%`) | Medians: `R=426.5d, F=1, M=£0.00` | `-0.19%` of net customer revenue (`-£31.5k`)
 - **Weaknesses & Limitations:** Hard spherical boundaries in log-RFM space split borderline customers smoothly rather than capturing multi-modal B2B vs. consumer sub-behaviors; static snapshot requires periodic re-scoring.
 - **Improvements:** Gaussian Mixture Models (GMM) for soft segment probabilities and tracking month-over-month cluster migration.
 

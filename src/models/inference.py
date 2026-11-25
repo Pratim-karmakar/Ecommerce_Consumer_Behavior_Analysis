@@ -10,7 +10,7 @@ from sklearn.pipeline import Pipeline
 
 from src.models.recommender import ItemKNNRecommender
 from src.models.regression import FEATURE_COLUMNS
-from src.models.segmentation import RFM_COLUMNS
+from src.models.segmentation import RFM_COLUMNS, SEGMENT_LABELS
 from src.utils.paths import find_project_root
 
 ModelInput = Union[Dict[str, Any], pd.Series, pd.DataFrame]
@@ -272,13 +272,13 @@ def derive_cluster_label_mapping(pipeline: Pipeline) -> Dict[int, Tuple[int, str
     middle = remaining[remaining["raw_id"] != dormant_raw]
 
     label_names: Dict[int, str] = {
-        champion_raw: "High-Value Loyal",
-        dormant_raw: "Dormant / Low-Engagement",
+        champion_raw: SEGMENT_LABELS["champion"],
+        dormant_raw: SEGMENT_LABELS["dormant"],
     }
     if len(middle) == 2:
         mid_sorted = middle.sort_values("Recency", ascending=False)
-        label_names[int(mid_sorted.iloc[0]["raw_id"])] = "At-Risk Established"
-        label_names[int(mid_sorted.iloc[1]["raw_id"])] = "Recent / Growing"
+        label_names[int(mid_sorted.iloc[0]["raw_id"])] = SEGMENT_LABELS["at_risk"]
+        label_names[int(mid_sorted.iloc[1]["raw_id"])] = SEGMENT_LABELS["growing"]
     else:
         for idx, raw_id in enumerate(middle.sort_values("MonetaryValue", ascending=False)["raw_id"]):
             label_names[int(raw_id)] = f"Mid-Tier Segment {idx + 1}"
@@ -296,7 +296,7 @@ def assign_customer_segment(
     Assign K-Means RFM segments consistently with `customer_segments.csv`.
 
     Validates non-negative Recency and Frequency, and cleanly assigns ClusterID=-1
-    ('Net-Returned / Zero-Spend') when MonetaryValue <= 0 without failing log1p.
+    ('Net-Return Accounts') when MonetaryValue <= 0 without failing log1p.
     """
     X = _coerce_feature_dataframe(rfm_features, RFM_COLUMNS, allow_missing_values=False)
     if (X["Recency"] < 0).any() or (X["Frequency"] < 0).any():
@@ -306,7 +306,7 @@ def assign_customer_segment(
     mapping = derive_cluster_label_mapping(pipe)
 
     cluster_ids = np.full(len(X), -1, dtype=int)
-    segments = np.full(len(X), "Net-Returned / Zero-Spend", dtype=object)
+    segments = np.full(len(X), SEGMENT_LABELS["non_positive"], dtype=object)
 
     pos_mask = (X["MonetaryValue"] > 0).to_numpy()
     if pos_mask.any():

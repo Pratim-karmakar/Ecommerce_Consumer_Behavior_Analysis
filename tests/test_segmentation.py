@@ -43,11 +43,11 @@ class TestKMeansSegmentation(unittest.TestCase):
         self.assertEqual(len(segmented), 13)
         self.assertEqual(int((segmented["ClusterID"] == -1).sum()), 1)
         self.assertEqual(set(summary["Segment"]), {
-            "Net-Returned / Zero-Spend",
-            "High-Value Loyal",
-            "At-Risk Established",
-            "Recent / Growing",
-            "Dormant / Low-Engagement",
+            "Net-Return Accounts",
+            "VIP Accounts",
+            "Lapsing Regulars",
+            "Active Growth",
+            "Dormant Buyers",
         })
         self.assertEqual(len(pca.explained_variance_ratio_), 2)
 
